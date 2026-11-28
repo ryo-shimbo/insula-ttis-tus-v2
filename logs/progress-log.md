@@ -3,10 +3,10 @@
 その日の進捗を**下に追記していく**。エラーとその解決は `error-log.md`。
 Obsidian 側の詳細な時系列は `myrepository/DailyLogs/`。
 
-## 現在地（2026-11-26）
-段階0（道具の確認）の残りは 3・4(c)・7。3 は CERMEP の審査の返事待ち。4(c)（BabelBrain の PPW 9）は手元の Mac（16 GB）ではメモリが足りず、計算機待ち。7 は 3 と 4(c) の後。
+## 現在地（2026-11-29）
+段階0（道具の確認）の残りは 3・4(c)・7。3 は CERMEP の審査の返事待ち（12-04 ごろまでに無ければ追いかける）。4(c) は計算機として学内の演習用計算機システム（GPGPU）2 号機（H100・Slurm・rootless Docker）を使えるようにし、BabelBrain v0.8.8 を Docker で動かして ernie の PPW 6 が手元の Mac と同じ音場になるのを確かめた。PPW 9 のジョブは 2 号機で順番待ち。7 は 3 と 4(c) の後。CERMEP の画像を 2 号機（大学の共用のサーバー）で処理してよいかは未確認。
 
-段階0の項目: 1 Mac の性能 ✅ → 2 SimNIBS（(a) ✅ (b) ✅ (c) charm と TI ✅）→ 3 CT 付きの公開頭部データ（CERMEP の審査待ち）→ 4 BabelBrain・k-Wave（(a) ✅ (b) ✅ (c) PPW 9 ← 計算機待ち）→ 5 NEURON と Aberra の錐体細胞 ✅ → 6 MorphoSONIC と PySONIC ✅ → 7 使うツールを決める。
+段階0の項目: 1 Mac の性能 ✅ → 2 SimNIBS（(a) ✅ (b) ✅ (c) charm と TI ✅）→ 3 CT 付きの公開頭部データ（CERMEP の審査待ち）→ 4 BabelBrain・k-Wave（(a) ✅ (b) ✅ (c) 2 号機で PPW 6 ✅・PPW 9 ← 順番待ち）→ 5 NEURON と Aberra の錐体細胞 ✅ → 6 MorphoSONIC と PySONIC ✅ → 7 使うツールを決める。
 
 計画の案（決定ではない）: 0 道具の確認 → 1 頭部モデルと島皮質のサブ領域 ROI → 2 tTIS の場 → 3 TUS の場 → 4 場のレベルの比較 → 5 神経（錐体細胞の tTIS → 錐体細胞の TUS。MorphoSONIC の軸索はコンテスト版の再現の照合と予備）→ 6 頭の間のばらつきと感度解析 → 7 執筆と投稿。
 
@@ -44,3 +44,9 @@ Obsidian 側の詳細な時系列は `myrepository/DailyLogs/`。
 - 段階0の 2(c): SimNIBS の TI の計算が ernie で手元で通った（1 回 約 5 分・最大 RSS 約 2 GB）。左の島皮質向けの Montage I（T7–P7 0.891 mA・Fp1–Fp2 1.109 mA・直径 40 mm）で、標的（半径 5 mm の灰白質）の TImax は平均 0.0985 V/m、選択性（灰白質全体の平均 / 標的の平均）は 0.395（スクリプトが出す `ROI mean / GM mean` 2.530 の逆数・先行研究の ≈0.40 と同じ）。
 - 電流の校正の誤差は Fp1–Fp2 で 7.6 %。Fp1 の相手を遠い P8 に替えると 15.8 % に増え、Fp1–P8 を直径 20 mm にすると 0.5 % に下がった。額の 40 mm の電極の外側（曲がりが強いところ）で電流の数えが外れるため。誤差は場の大きさの倍率にだけ効き、比の指標には効かない。本番では毎回この誤差を記録する。
 - tTIS の道具は SimNIBS でよい（最終の決定は段階0の 7）。
+
+## 2026-11-27〜29
+- 段階0の 4(c): 計算機は、学内の演習用計算機システム（GPGPU）2 号機を使う。計算ノードは 1 台（H100 NVL 94 GB ×8・CPU 32 コア・メモリ 1 TB・ドライバー 595.84）。Slurm でジョブを出し、rootless Docker のコンテナで動かす（`#SBATCH --container=`・イメージは学内の Harbor に置く）。1 ジョブは GPU 2 枚・16 コア・256 GB・24 時間まで。学生の保存容量は 240 GB。演習の時間はジョブが止まる。大学の VPN で家から SSH で入れる。料金と申請は要らない。
+- BabelBrain の Linux 用の完成品は配られていないので、作者の `environment_linux_cuda_13_driver_580.yml` から計算に要らない重い部品を外した環境で、v0.8.8（手元の Mac と同じ版）を入れたイメージを作った（8 GB・`scripts/gpgpu/docker/babelbrain/`）。コンテナの中から H100 が CUDA で見え、BabelBrain は画面なし（`--headless`）で H100 を見つけた。BabelBrain の利用の記録（Telemetry）は `MYAPP_DISABLE_TELEMETRY=1` で止めて回す。
+- ernie の PPW 6（`scripts/gpgpu/bb_ernie.sbatch`）が 2 号機で通った（9 分 11 秒・最大 RSS 20.7 GB）。手元の Mac の PPW 6 と比べると（`scripts/gpgpu/compare_bb_outputs.py`）、標的 ±10 mm の窓の中の最大は 260,980 / 260,984 Pa で同じ場所（標的から 5.4 mm・11-19 と同じ）、差は窓の中の最大の 4.2×10⁻⁵、焦点の -6 dB の領域は 297.2 mm³ で Dice 0.9997。全体では、最大の圧力 539,672.1 / 539,671.6 Pa（頭皮の近く・同じ場所）、相対 L2 の差 5.0×10⁻⁴。違いが最大の 1 % を超えるのは頭皮の縁の 4 ボクセル（一番大きいのは 3.8 %）、0.1 % を超えるのは 238 ボクセル（1.8 億ボクセル中）。2 号機（Linux・CUDA）と Mac（Metal）は、焦点では同じ結果を出す。
+- PPW 9 のジョブ（128 GB・4 時間）を出した。順番待ち。
