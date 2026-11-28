@@ -7,14 +7,17 @@
 #   - profile.yaml: 熱の計算の条件（Step 3 は今回は回さない）
 #   4(c): 環境変数 BB_PPW（1 波長あたりの点の数・既定 6）と BB_STEPS（'1' なら Step 1 だけ・既定 '12'）で変える。
 #   出力は PPW 6 なら output/、それ以外は output_ppw<N>/
+#   学内の GPGPU サーバー（Docker の中）: 環境変数 BB_DATA で data/ の場所を、BB_OUTROOT で出力を置く親フォルダを変える
+#   （既定は手元の Mac の data/ と data/babelbrain_test/）
 import os
 
-DATA = os.path.expanduser('~/Documents/20myknowledge/21-research/insula-ttis-tus-v2/data')
+DATA = os.environ.get('BB_DATA', os.path.expanduser('~/Documents/20myknowledge/21-research/insula-ttis-tus-v2/data'))
 WORK = os.path.join(DATA, 'babelbrain_test')
+OUTROOT = os.environ.get('BB_OUTROOT', WORK)
 PPW = int(os.environ.get('BB_PPW', '6'))
 STEPS = os.environ.get('BB_STEPS', '12')
 OUT = 'output' if PPW == 6 else f'output_ppw{PPW}'
-print(f'PPW={PPW} STEPS={STEPS} OUT={OUT}')
+print(f'PPW={PPW} STEPS={STEPS} DATA={DATA} OUT={os.path.join(OUTROOT, OUT)}')
 
 bb = launch(
     t1w=os.path.join(DATA, 'm2m_ernie', 'T1.nii.gz'),
@@ -27,7 +30,7 @@ bb = launch(
     ct_type='NONE',         # CT なし（骨は charm の分け方から）
     frequency_khz=500,
     ppw=PPW,                # 6 = 早い見積もり（メモリを抑える）・9 = 他のツールと合わせる細かさ
-    output_path=os.path.join(WORK, OUT) + '/',
+    output_path=os.path.join(OUTROOT, OUT) + '/',
 )
 auto_answer_dialogs(question=QMessageBox.Yes)  # 前の結果があっても計算し直す
 
